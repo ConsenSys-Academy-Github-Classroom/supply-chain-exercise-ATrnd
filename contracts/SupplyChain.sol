@@ -4,7 +4,6 @@ pragma solidity ^0.8.0;
 contract SupplyChain {
 
   address public owner;
-
   uint public skuCount;
 
   // <items mapping>
@@ -31,15 +30,10 @@ contract SupplyChain {
    * Events
    */
 
-  // <LogForSale event: sku arg>
   event LogForSale(uint sku);
-
-  // <LogSold event: sku arg>
-
-  // <LogShipped event: sku arg>
-
-  // <LogReceived event: sku arg>
-
+  event LogSold(uint sku);
+  event LogShipped(uint sku);
+  event LogReceived(uint sku);
 
   /*
    * Modifiers
@@ -123,7 +117,7 @@ contract SupplyChain {
     itemParams.buyer = payable(address(0));
     items.push(itemParams);
     skuCount = skuCount + 1;
-    emit LogForSale(skuCount);
+    emit LogForSale(itemParams.sku);
     return true;
   }
 
@@ -139,7 +133,12 @@ contract SupplyChain {
   //      sure the buyer is refunded any excess ether sent.
   // 6. call the event associated with this function!
 
-  function buyItem(uint sku) public {}
+  function buyItem(uint sku) payable public forSale(sku) paidEnough(items[sku].price) checkValue(sku) {
+    (bool sent, bytes memory data) = items[sku].seller.call{value: msg.value}("");
+    items[sku].buyer = payable(msg.sender);
+    items[sku].state = State.Sold;
+    emit LogSold(items[sku].sku);
+  }
 
   // 1. Add modifiers to check:
   //    - the item is sold already
