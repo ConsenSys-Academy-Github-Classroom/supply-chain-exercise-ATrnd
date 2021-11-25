@@ -31,10 +31,10 @@ contract SupplyChain {
    */
 
   // <LogForSale event: sku arg>
-  event LogForSale(uint sku, State state);
-  event LogSold(uint sku, State state);
-  event LogShipped(uint sku, State state);
-  event LogReceived(uint sku, State state);
+  event LogForSale(uint sku, string state);
+  event LogSold(uint sku, string state);
+  event LogShipped(uint sku, string state);
+  event LogReceived(uint sku, string state);
 
   /*
    * Modifiers
@@ -43,17 +43,17 @@ contract SupplyChain {
   // Create a modifer, `isOwner` that checks if the msg.sender is the owner of the contract
   // <modifier: isOwner
   modifier isOwner() {
-    require (msg.sender == owner);
+    require (msg.sender == owner, "not owner");
     _;
   }
 
   modifier verifyCaller(address _address) {
-    require (msg.sender == _address);
+    require (msg.sender == _address, "verify caller?");
     _;
   }
 
   modifier paidEnough(uint _price) {
-    require(msg.value >= _price);
+    require(msg.value >= _price, "invalid price paid");
     _;
   }
 
@@ -62,7 +62,7 @@ contract SupplyChain {
     _;
     uint _price = items[_sku].price;
     uint amountToRefund = msg.value - _price;
-    items[_sku].buyer.transfer(amountToRefund);
+    payable(items[_sku].buyer).call{value: amountToRefund}("");
   }
 
   // For each of the following modifiers, use what you learned about modifiers
@@ -118,7 +118,7 @@ contract SupplyChain {
     itemParams.buyer = payable(address(0));
     items.push(itemParams);
     skuCount = skuCount + 1;
-    emit LogForSale(itemParams.sku, State.ForSale);
+    emit LogForSale(itemParams.sku, "ForSale");
     return true;
   }
 
@@ -135,10 +135,10 @@ contract SupplyChain {
   // 6. call the event associated with this function!
 
   function buyItem(uint sku) payable public forSale(sku) paidEnough(items[sku].price) checkValue(sku) {
-    (bool sent, bytes memory data) = items[sku].seller.call{value: msg.value}("");
+    (bool sent, bytes memory data) = payable(items[sku].seller).call{value: msg.value}("");
     items[sku].buyer = payable(msg.sender);
     items[sku].state = State.Sold;
-    emit LogForSale(items[sku].sku, State.Sold);
+    emit LogForSale(items[sku].sku, "Sold");
   }
 
   // 1. Add modifiers to check:
