@@ -16,8 +16,6 @@ contract SupplyChain {
     Received
   }
 
-  // <struct Item: name, sku, price, state, seller, and buyer>
-
   struct Item {
     string name;
     uint sku;
@@ -27,18 +25,7 @@ contract SupplyChain {
     address payable buyer;
   }
 
-  struct Test {
-    string name;
-    uint sku;
-    uint price;
-    State state;
-    address payable seller;
-    address payable buyer;
-  }
-
-
   Item[] public items;
-  Test[] public test;
 
   /*
    * Events
@@ -85,78 +72,46 @@ contract SupplyChain {
 
   // For each of the following modifiers, use what you learned about modifiers
   // to give them functionality.
+
   // For example, the forSale modifier should
   // require that the item with the given sku has the state ForSale.
+
   // Note that
   // the uninitialized Item.State is 0, which is also the index of the ForSale
   // value, so checking that Item.State == ForSale is not sufficient to check
   // that an Item is for sale. Hint: What item properties will be non-zero when
   // an Item has been added?
 
-  // modifier forSale
-  // modifier sold(uint _sku)
-  // modifier shipped(uint _sku)
-  // modifier received(uint _sku)
+  modifier forSale(uint _sku) {
+    require(items[_sku].state == State.ForSale && items[_sku].price > 0, "not for sale");
+    _;
+  }
+
+  modifier sold(uint _sku) {
+    require(items[_sku].state == State.Sold, "not sold");
+    _;
+  }
+
+  modifier shipped(uint _sku) {
+    require(items[_sku].state == State.Shipped, "not shipped");
+    _;
+  }
+
+  modifier received(uint _sku) {
+    require(items[_sku].state == State.Received, "not received");
+    _;
+  }
 
   // 1. Set the owner to the transaction sender
-  // 2. Initialize the sku count to 0. Question, is this necessary: no?
-
+  // 2. Initialize the sku count to 0. Question, is this necessary?no
   constructor() {
     owner = msg.sender;
   }
 
-    // hint:
-    // items[skuCount] = Item({
-    //  name: _name,
-    //  sku: skuCount,
-    //  price: _price,
-    //  state: State.ForSale,
-    //  seller: msg.sender,
-    //  buyer: address(0)
-    //});
-    //
-    //skuCount = skuCount + 1;
-    // emit LogForSale(skuCount);
-    // return true;
-
-    // 1. Create a new item and put in array
-    // 2. Increment the skuCount by one
-    // 3. Emit the appropriate event
-    // 4. return true
-
-    // items[skuCount] = Item({
-    //   name: _name,
-    //   sku: skuCount,
-    //   price: _price,
-    //   state: State.ForSale,
-    //   seller: payable(msg.sender),
-    //   buyer: payable(address(0))
-    // });
-    // skuCount = skuCount + 1;
-    // emit LogForSale(skuCount);
-    // return true;
-
-  // function addItem() payable public {
-  //   items[0] = Item({
-  //     name: "test",
-  //     sku: 1,
-  //     price: 1,
-  //     state: State.ForSale,
-  //     seller: payable(msg.sender),
-  //     buyer: payable(address(0))
-  //   });
-  // }
-
-  // function testItem() public {
-  //   Test memory testParam;
-  //   testParam.name = "Hack";
-  //   testParam.sku = 1;
-  //   testParam.price = 1;
-  //   testParam.state = State.ForSale;
-  //   testParam.seller = payable(msg.sender);
-  //   testParam.buyer = payable(address(0));
-  //   test.push(testParam);
-  // }
+  // 1. Create a new item and put in array
+  // 2. Increment the skuCount by one
+  // 3. Emit the appropriate event
+  // 4. return true
 
   function addItem(string memory _name, uint _price) payable public returns (bool) {
     Item memory itemParams;
@@ -171,39 +126,6 @@ contract SupplyChain {
     emit LogForSale(skuCount);
     return true;
   }
-
-  //   items[skuCount] = Item({
-  //     name: _name,
-  //     sku: skuCount,
-  //     price: _price,
-  //     state: State.ForSale,
-  //     seller: payable(msg.sender),
-  //     buyer: payable(address(0))
-  //   });
-
-    // items[0] = Item({
-    //   name: "test",
-    //   sku: 1,
-    //   price: 1,
-    //   state: State.ForSale,
-    //   seller: payable(msg.sender),
-    //   buyer: payable(address(0))
-    // });
-
-
-  // function addItem(string memory _name, uint _price) payable public returns (bool) {
-  //   items[skuCount] = Item({
-  //     name: _name,
-  //     sku: skuCount,
-  //     price: _price,
-  //     state: State.ForSale,
-  //     seller: payable(msg.sender),
-  //     buyer: payable(address(0))
-  //   });
-  //   skuCount = skuCount + 1;
-  //   emit LogForSale(skuCount);
-  //   return true;
-  // }
 
   // Implement this buyItem function.
   // 1. it should be payable in order to receive refunds
