@@ -35,6 +35,7 @@ contract SupplyChain {
   event LogSold(uint sku, string state);
   event LogShipped(uint sku, string state);
   event LogReceived(uint sku, string state);
+  event testCredSent(uint cred);
 
   /*
    * Modifiers
@@ -62,7 +63,12 @@ contract SupplyChain {
     _;
     uint _price = items[_sku].price;
     uint amountToRefund = msg.value - _price;
-    payable(items[_sku].buyer).call{value: amountToRefund}("");
+    (bool sent, bytes memory data) = payable(items[_sku].buyer).call{value: amountToRefund}("");
+    if(sent) {
+      emit testCredSent(amountToRefund);
+    } else {
+      emit testCredSent(0);
+    }
   }
 
   // For each of the following modifiers, use what you learned about modifiers
@@ -135,25 +141,32 @@ contract SupplyChain {
   // 6. call the event associated with this function!
 
   function buyItem(uint sku) payable public forSale(sku) paidEnough(items[sku].price) checkValue(sku) {
-    (bool sent, bytes memory data) = payable(items[sku].seller).call{value: msg.value}("");
+    (bool sent, bytes memory data) = payable(items[sku].seller).call{value: items[sku].price}("");
     items[sku].buyer = payable(msg.sender);
     items[sku].state = State.Sold;
-    emit LogForSale(items[sku].sku, "Sold");
+    if(sent) {
+      emit LogForSale(items[sku].sku, "Sold");
+    }
   }
 
   // 1. Add modifiers to check:
-  //    - the item is sold already
+  //    + the item is sold already
   //    - the person calling this function is the seller.
   // 2. Change the state of the item to shipped.
   // 3. call the event associated with this function!
-  function shipItem(uint sku) public {}
+  function shipItem(uint sku) public sold(sku) verifyCaller(items[sku].seller) {
+    items[sku].state = State.Shipped;
+    emit LogShipped(items[sku].sku, "Shipped");
+  }
 
   // 1. Add modifiers to check
   //    - the item is shipped already
   //    - the person calling this function is the buyer.
   // 2. Change the state of the item to received.
   // 3. Call the event associated with this function!
-  function receiveItem(uint sku) public {}
+  function receiveItem(uint sku) public {
+
+  }
 
   // Uncomment the following code block. it is needed to run tests
   function fetchItem(uint _sku) public view
