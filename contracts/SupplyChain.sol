@@ -27,13 +27,25 @@ contract SupplyChain {
     address payable buyer;
   }
 
+  struct Test {
+    string name;
+    uint sku;
+    uint price;
+    State state;
+    address payable seller;
+    address payable buyer;
+  }
+
+
   Item[] public items;
+  Test[] public test;
 
   /*
    * Events
    */
 
   // <LogForSale event: sku arg>
+  event LogForSale(uint sku);
 
   // <LogSold event: sku arg>
 
@@ -47,30 +59,35 @@ contract SupplyChain {
    */
 
   // Create a modifer, `isOwner` that checks if the msg.sender is the owner of the contract
-
   // <modifier: isOwner
+  modifier isOwner() {
+    require (msg.sender == owner);
+    _;
+  }
 
-  modifier verifyCaller (address _address) {
-    // require (msg.sender == _address);
+  modifier verifyCaller(address _address) {
+    require (msg.sender == _address);
     _;
   }
 
   modifier paidEnough(uint _price) {
-    // require(msg.value >= _price);
+    require(msg.value >= _price);
     _;
   }
 
+  // refund them after pay for item (why it is before, _ checks for logic before func)
   modifier checkValue(uint _sku) {
-    //refund them after pay for item (why it is before, _ checks for logic before func)
     _;
-    // uint _price = items[_sku].price;
-    // uint amountToRefund = msg.value - _price;
-    // items[_sku].buyer.transfer(amountToRefund);
+    uint _price = items[_sku].price;
+    uint amountToRefund = msg.value - _price;
+    items[_sku].buyer.transfer(amountToRefund);
   }
 
   // For each of the following modifiers, use what you learned about modifiers
-  // to give them functionality. For example, the forSale modifier should
-  // require that the item with the given sku has the state ForSale. Note that
+  // to give them functionality.
+  // For example, the forSale modifier should
+  // require that the item with the given sku has the state ForSale.
+  // Note that
   // the uninitialized Item.State is 0, which is also the index of the ForSale
   // value, so checking that Item.State == ForSale is not sufficient to check
   // that an Item is for sale. Hint: What item properties will be non-zero when
@@ -81,16 +98,12 @@ contract SupplyChain {
   // modifier shipped(uint _sku)
   // modifier received(uint _sku)
 
-  constructor() public {
-    // 1. Set the owner to the transaction sender
-    // 2. Initialize the sku count to 0. Question, is this necessary?
-  }
+  // 1. Set the owner to the transaction sender
+  // 2. Initialize the sku count to 0. Question, is this necessary: no?
 
-  function addItem(string memory _name, uint _price) public returns (bool) {
-    // 1. Create a new item and put in array
-    // 2. Increment the skuCount by one
-    // 3. Emit the appropriate event
-    // 4. return true
+  constructor() {
+    owner = msg.sender;
+  }
 
     // hint:
     // items[skuCount] = Item({
@@ -105,7 +118,92 @@ contract SupplyChain {
     //skuCount = skuCount + 1;
     // emit LogForSale(skuCount);
     // return true;
+
+    // 1. Create a new item and put in array
+    // 2. Increment the skuCount by one
+    // 3. Emit the appropriate event
+    // 4. return true
+
+    // items[skuCount] = Item({
+    //   name: _name,
+    //   sku: skuCount,
+    //   price: _price,
+    //   state: State.ForSale,
+    //   seller: payable(msg.sender),
+    //   buyer: payable(address(0))
+    // });
+    // skuCount = skuCount + 1;
+    // emit LogForSale(skuCount);
+    // return true;
+
+  // function addItem() payable public {
+  //   items[0] = Item({
+  //     name: "test",
+  //     sku: 1,
+  //     price: 1,
+  //     state: State.ForSale,
+  //     seller: payable(msg.sender),
+  //     buyer: payable(address(0))
+  //   });
+  // }
+
+  // function testItem() public {
+  //   Test memory testParam;
+  //   testParam.name = "Hack";
+  //   testParam.sku = 1;
+  //   testParam.price = 1;
+  //   testParam.state = State.ForSale;
+  //   testParam.seller = payable(msg.sender);
+  //   testParam.buyer = payable(address(0));
+  //   test.push(testParam);
+  // }
+
+  function addItem(string memory _name, uint _price) payable public returns (bool) {
+    Item memory itemParams;
+    itemParams.name = _name;
+    itemParams.sku = skuCount;
+    itemParams.price = _price;
+    itemParams.state = State.ForSale;
+    itemParams.seller = payable(msg.sender);
+    itemParams.buyer = payable(address(0));
+    items.push(itemParams);
+    skuCount = skuCount + 1;
+    emit LogForSale(skuCount);
+    return true;
   }
+
+  //   items[skuCount] = Item({
+  //     name: _name,
+  //     sku: skuCount,
+  //     price: _price,
+  //     state: State.ForSale,
+  //     seller: payable(msg.sender),
+  //     buyer: payable(address(0))
+  //   });
+
+    // items[0] = Item({
+    //   name: "test",
+    //   sku: 1,
+    //   price: 1,
+    //   state: State.ForSale,
+    //   seller: payable(msg.sender),
+    //   buyer: payable(address(0))
+    // });
+
+
+  // function addItem(string memory _name, uint _price) payable public returns (bool) {
+  //   items[skuCount] = Item({
+  //     name: _name,
+  //     sku: skuCount,
+  //     price: _price,
+  //     state: State.ForSale,
+  //     seller: payable(msg.sender),
+  //     buyer: payable(address(0))
+  //   });
+  //   skuCount = skuCount + 1;
+  //   emit LogForSale(skuCount);
+  //   return true;
+  // }
 
   // Implement this buyItem function.
   // 1. it should be payable in order to receive refunds
@@ -118,6 +216,7 @@ contract SupplyChain {
   //    - check the value after the function is called to make
   //      sure the buyer is refunded any excess ether sent.
   // 6. call the event associated with this function!
+
   function buyItem(uint sku) public {}
 
   // 1. Add modifiers to check:
@@ -136,7 +235,7 @@ contract SupplyChain {
 
   // Uncomment the following code block. it is needed to run tests
   function fetchItem(uint _sku) public view
-    returns (string memory name, uint sku, uint price, uint state, address seller, address buyer)
+  returns (string memory name, uint sku, uint price, uint state, address seller, address buyer)
   {
     name = items[_sku].name;
     sku = items[_sku].sku;
