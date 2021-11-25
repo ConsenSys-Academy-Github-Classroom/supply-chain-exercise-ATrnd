@@ -27,6 +27,8 @@ contract SupplyChain {
     address payable buyer;
   }
 
+  Item[] public items;
+
   /*
    * Events
    */
@@ -133,15 +135,16 @@ contract SupplyChain {
   function receiveItem(uint sku) public {}
 
   // Uncomment the following code block. it is needed to run tests
-  /* function fetchItem(uint _sku) public view */
-  /*   returns (string memory name, uint sku, uint price, uint state, address seller, address buyer) */
-  /* { */
-  /*   name = items[_sku].name; */
-  /*   sku = items[_sku].sku; */
-  /*   price = items[_sku].price; */
-  /*   state = uint(items[_sku].state); */
-  /*   seller = items[_sku].seller; */
-  /*   buyer = items[_sku].buyer; */
-  /*   return (name, sku, price, state, seller, buyer); */
-  /* } */
+  function fetchItem(uint _sku) public view
+    returns (string memory name, uint sku, uint price, uint state, address seller, address buyer)
+  {
+    name = items[_sku].name;
+    sku = items[_sku].sku;
+    price = items[_sku].price;
+    state = uint(items[_sku].state);
+    seller = items[_sku].seller;
+    buyer = items[_sku].buyer;
+    return (name, sku, price, state, seller, buyer);
+  }
+
 }
