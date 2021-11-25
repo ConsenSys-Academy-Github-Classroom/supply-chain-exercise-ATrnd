@@ -30,10 +30,11 @@ contract SupplyChain {
    * Events
    */
 
-  event LogForSale(uint sku);
-  event LogSold(uint sku);
-  event LogShipped(uint sku);
-  event LogReceived(uint sku);
+  // <LogForSale event: sku arg>
+  event LogForSale(uint sku, State state);
+  event LogSold(uint sku, State state);
+  event LogShipped(uint sku, State state);
+  event LogReceived(uint sku, State state);
 
   /*
    * Modifiers
@@ -117,7 +118,7 @@ contract SupplyChain {
     itemParams.buyer = payable(address(0));
     items.push(itemParams);
     skuCount = skuCount + 1;
-    emit LogForSale(itemParams.sku);
+    emit LogForSale(itemParams.sku, State.ForSale);
     return true;
   }
 
@@ -137,7 +138,7 @@ contract SupplyChain {
     (bool sent, bytes memory data) = items[sku].seller.call{value: msg.value}("");
     items[sku].buyer = payable(msg.sender);
     items[sku].state = State.Sold;
-    emit LogSold(items[sku].sku);
+    emit LogForSale(items[sku].sku, State.Sold);
   }
 
   // 1. Add modifiers to check:
